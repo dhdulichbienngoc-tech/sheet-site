@@ -19,8 +19,8 @@
 
     <script>
         const spreadsheetId = '1wI4qZVKpSqsWAW8_bLQAkMlx0nyAhX-k7ZLYBgue8eY';
-        const apiKey = 'AIzaSyDfQeTbE4g03IgQ4Txc_895v-T6YOwcf4Q'; // Thay bằng API Key của bạn
-        const sheetNames = ['Blue Ocean Intinerary Price details', 'Northern HOTEL ', 'Central HOTEL ', 'Southern HOTEL', 'Halong Cruise', 'Restaurant', 'Contact']; // Thay bằng tên thực của các sheet (lấy từ gid: 1808798930 -> Sheet1, 943202508 -> Sheet2, v.v. Kiểm tra tên sheet)
+        const apiKey = 'AIzaSyDfQeTbE4g03IgQ4Txc_895v-T6YOwcf4Q'; // THAY BẰNG API KEY THỰC CỦA BẠN (từ Google Cloud)
+        const sheetNames = ['Blue Ocean Intinerary Price details', 'Northern HOTEL ', 'Central HOTEL ', 'Southern HOTEL', 'Halong Cruise ', 'Restaurant', 'Contact']; // THAY BẰNG TÊN THỰC CỦA CÁC SHEET (ví dụ: ['Danh sách 1', 'Danh sách 2', ...]). Kiểm tra trong Sheet > Các tab.
 
         // Tạo navigation
         const tabs = document.getElementById('sheetTabs');
@@ -41,6 +41,9 @@
             const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}?key=${apiKey}`;
             try {
                 const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Lỗi: ${response.status} - ${response.statusText}`);
+                }
                 const data = await response.json();
                 const table = createTable(data.values);
                 document.getElementById('tableContainer').innerHTML = '';
@@ -48,9 +51,9 @@
 
                 // Update active tab
                 document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-                document.querySelector(`.nav-link[href="#"][textContent="${sheetName}"]`).classList.add('active');
+                event.target.classList.add('active');
             } catch (error) {
-                console.error('Lỗi:', error);
+                document.getElementById('tableContainer').innerHTML = `<p>Lỗi khi load dữ liệu: ${error.message}. Kiểm tra API key, quyền chia sẻ Sheet, hoặc tên sheet.</p>`;
             }
         }
 
