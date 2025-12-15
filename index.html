@@ -18,9 +18,9 @@
     <div id="tableContainer" class="mt-4"></div>
 
     <script>
-        const spreadsheetId = '1wI4qZVKpSqsWAW8_bLQAkMlx0nyAhX-k7ZLYBgue8eY';
-        const apiKey = 'AIzaSyDfQeTbE4g03IgQ4Txc_895v-T6YOwcf4Q'; // THAY BẰNG API KEY THỰC CỦA BẠN (từ Google Cloud)
-        const sheetNames = ['Blue Ocean Intinerary Price details', 'Northern HOTEL ', 'Central HOTEL ', 'Southern HOTEL', 'Halong Cruise ', 'Restaurant', 'Contact']; // THAY BẰNG TÊN THỰC CỦA CÁC SHEET (ví dụ: ['Danh sách 1', 'Danh sách 2', ...]). Kiểm tra trong Sheet > Các tab.
+        const publishedId = '2PACX-1vSVY8H9-kxm9ywjaJNbZibgqud97ulwH8V0Q1K3o2ddEihkhJmb5ThXxjJDShJZaeTLQAwOumdB5X1b'; // ID encoded từ publish URL của bạn
+        const sheetNames = ['Blue Ocean Itinerary Price details', 'Northern HOTEL', 'Central HOTEL', 'Southern HOTEL', 'Halong Cruise', 'Restaurant', 'Contact']; // Tên sheet chính xác từ Sheet của bạn
+        const gids = ['1808798930', '943202508', '1545924102', '1159680108', '315991677', '116299310', '1650609520']; // GID từ link gốc của bạn, khớp với sheetNames theo thứ tự
 
         // Tạo navigation
         const tabs = document.getElementById('sheetTabs');
@@ -31,29 +31,38 @@
             a.className = 'nav-link' + (index === 0 ? ' active' : '');
             a.href = '#';
             a.textContent = name;
-            a.onclick = () => loadSheet(name);
+            a.onclick = () => loadSheet(index);
             li.appendChild(a);
             tabs.appendChild(li);
         });
 
-        // Hàm load dữ liệu sheet
-        async function loadSheet(sheetName) {
-            const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}?key=${apiKey}`;
+        // Hàm load dữ liệu sheet (sử dụng gviz/tq cho published sheet)
+        async function loadSheet(sheetIndex) {
+            const sheetName = sheetNames[sheetIndex];
+            const gid = gids[sheetIndex];
+            const url = `https://docs.google.com/spreadsheets/d/e/${publishedId}/gviz/tq?gid=${gid}&tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
             try {
                 const response = await fetch(url);
                 if (!response.ok) {
                     throw new Error(`Lỗi: ${response.status} - ${response.statusText}`);
                 }
-                const data = await response.json();
-                const table = createTable(data.values);
+                const text = await response.text();
+                // Parse JSON từ response (gviz trả về wrapped JSON)
+                const jsonString = text.match(/google.visualization.Query.setResponse\(([\s\S]*)\);/)[1];
+                const data = JSON.parse(jsonString);
+                const rows = data.table.rows.map(row => row.c.map(cell => cell ? (cell.v || '') : ''));
+                const headers = data.table.cols.map(col => col.label || '');
+                const tableData = [headers, ...rows];
+
+                const table = createTable(tableData);
                 document.getElementById('tableContainer').innerHTML = '';
                 document.getElementById('tableContainer').appendChild(table);
 
                 // Update active tab
                 document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-                event.target.classList.add('active');
+                document.querySelectorAll('.nav-link')[sheetIndex].classList.add('active');
             } catch (error) {
-                document.getElementById('tableContainer').innerHTML = `<p>Lỗi khi load dữ liệu: ${error.message}. Kiểm tra API key, quyền chia sẻ Sheet, hoặc tên sheet.</p>`;
+                document.getElementById('tableContainer').innerHTML = `<p>Lỗi khi load dữ liệu: ${error.message}. Kiểm tra publish và gid.</p>`;
             }
         }
 
@@ -74,7 +83,7 @@
         }
 
         // Load sheet đầu tiên
-        loadSheet(sheetNames[0]);
+        loadSheet(0);
     </script>
 </body>
 </html>
