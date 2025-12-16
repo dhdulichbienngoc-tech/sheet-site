@@ -12,12 +12,11 @@
         .container { max-width: 1200px; margin: auto; }
         .nav-pills .nav-link { background-color: #e9ecef; color: #0d6efd; border-radius: 20px; margin: 0 5px; padding: 10px 20px; }
         .nav-pills .nav-link.active { background-color: #0d6efd; color: white; }
-        .accordion-button { color: #0d6efd; font-weight: bold; background-color: #f0f8ff; }
         .table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
         .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         .table th { background-color: #f2f2f2; }
         .table tr:hover { background-color: #f1f1f1; }
-        /* Màu nhạt */
+        /* Màu nhạt cho tab 2+ */
         .row-3star { background-color: #d4edda; } /* Xanh lá nhạt */
         .row-4star { background-color: #d1ecf1; } /* Xanh dương nhạt */
         .row-5star { background-color: #f8d7da; } /* Đỏ hồng nhạt */
@@ -78,12 +77,7 @@
                 const csvText = await response.text();
                 const data = Papa.parse(csvText, {header: false, skipEmptyLines: true}).data;
 
-                let content;
-                if (sheetIndex === 0) {
-                    content = createAccordionForSheet1(data);
-                } else {
-                    content = createTableForOtherSheets(data, sheetIndex);
-                }
+                const content = createTable(data, sheetIndex > 0); // Bảng đơn giản, màu chỉ cho sheetIndex > 0
 
                 document.getElementById('tableContainer').innerHTML = '';
                 document.getElementById('tableContainer').appendChild(content);
@@ -95,62 +89,19 @@
             }
         }
 
-        // Accordion cho sheet 1
-        function createAccordionForSheet1(data) {
-            const accordion = document.createElement('div');
-            accordion.className = 'accordion';
-            let mainId = 0;
-            let subId = 0;
-            let currentMain = '';
-            let currentSub = '';
-            let subTable = '';
-            data.forEach((row, i) => {
-                if (i === 0) return; // Skip header
-                if (row[0] === '' && row[1].includes('package')) { // Main package
-                    if (currentSub) {
-                        currentSub += subTable + '</table></div></div>';
-                        currentMain += currentSub + '</div></div>';
-                    }
-                    if (currentMain) accordion.innerHTML += currentMain;
-                    currentMain = `<div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#main${mainId}">${row[1]}</button></h2><div id="main${mainId}" class="accordion-collapse collapse show"><div class="accordion">`;
-                    mainId++;
-                    currentSub = '';
-                    subTable = '';
-                } else if (row[1] === 'Tour Itinerary') { // Sub-tour header
-                    if (currentSub) {
-                        currentSub += subTable + '</table></div></div>';
-                        currentMain += currentSub;
-                    }
-                    subTitle = row[0];
-                    currentSub = `<div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#sub${subId}">- ${subTitle}</button></h2><div id="sub${subId}" class="accordion-collapse collapse"><div class="accordion-body"><table class="table"><tr><th>Tour Itinerary</th><th>Inclusions</th><th>Price (VND)</th></tr>`;
-                    subId++;
-                    subTable = '';
-                } else if (row[0] === '' && row[1]) { // Details row
-                    let link = row[1].startswith('http') ? `<a href="${row[1]}" target="_blank">View Itinerary</a>` : row[1];
-                    subTable += `<tr><td>${link}</td><td>${row[2] || ''}</td><td>${row[3] || ''}</td></tr>`;
-                }
-            });
-            if (currentSub) {
-                currentSub += subTable + '</table></div></div>';
-                currentMain += currentSub + '</div></div>';
-            }
-            if (currentMain) accordion.innerHTML += currentMain;
-            return accordion;
-        }
-
-        // Bảng cho sheet 2+
-        function createTableForOtherSheets(data, index) {
+        // Hàm tạo bảng đơn giản, với màu cho sheet 2+
+        function createTable(data, applyColor) {
             const table = document.createElement('table');
             table.className = 'table table-bordered table-hover';
             data.forEach((row, i) => {
                 const tr = document.createElement('tr');
                 row.forEach((cell, j) => {
                     const td = document.createElement(i === 0 ? 'th' : 'td');
-                    if (cell.startsWith('http')) td.innerHTML = `<a href="${cell}" target="_blank">View Website</a>`;
+                    if (cell.startsWith('http')) td.innerHTML = `<a href="${cell}" target="_blank">View Itinerary / Website</a>`;
                     else td.textContent = cell;
                     tr.appendChild(td);
                 });
-                if (i > 0 && row[1] && row[1].trim() !== '' && row[2] && row[2].trim() !== '') { // Chỉ màu nếu có No.
+                if (applyColor && i > 0 && row[1] && row[1].trim() !== '' && row[2] && row[2].trim() !== '') { // Chỉ màu nếu có No. và Ranking
                     if (row[2].includes('3')) tr.classList.add('row-3star');
                     else if (row[2].includes('4')) tr.classList.add('row-4star');
                     else if (row[2].includes('5')) tr.classList.add('row-5star');
