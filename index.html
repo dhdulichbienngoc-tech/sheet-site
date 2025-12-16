@@ -20,7 +20,7 @@
     <div id="tableContainer" class="mt-4"></div>
 
     <script>
-        const publishedId = '2PACX-1vSVY8H9-kxm9ywjaJNbZibgqud97ulwH8V0Q1K3o2ddEihkhJmb5ThXxjJDShJZaeTLQAwOumdB5X1b'; // Giữ nguyên
+        const docId = '1wI4qZVKpSqsWAW8_bLQAkMlx0nyAhX-k7ZLYBgue8eY'; // ID của Google Sheet
         const sheetNames = ['Blue Ocean Itinerary Price details', 'Northern HOTEL', 'Central HOTEL', 'Southern HOTEL', 'Halong Cruise', 'Restaurant', 'Contact']; // Giữ nguyên
         const gids = ['1808798930', '943202508', '1545924102', '1159680108', '315991677', '116299310', '1650609520']; // Giữ nguyên
 
@@ -38,27 +38,22 @@
             tabs.appendChild(li);
         });
 
-        // Hàm load dữ liệu sheet
+        // Hàm load dữ liệu sheet (sử dụng CSV)
         async function loadSheet(sheetIndex) {
-            const sheetName = sheetNames[sheetIndex];
             const gid = gids[sheetIndex];
-            const url = `https://docs.google.com/spreadsheets/d/e/${publishedId}/gviz/tq?gid=${gid}&tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
+            const url = `https://docs.google.com/spreadsheets/d/${docId}/export?format=csv&gid=${gid}`;
             try {
                 const response = await fetch(url);
                 if (!response.ok) {
                     throw new Error(`Lỗi: ${response.status} - ${response.statusText}`);
                 }
-                const text = await response.text();
-                const jsonString = text.match(/google.visualization.Query.setResponse\(([\s\S]*)\);/)[1];
-                const data = JSON.parse(jsonString);
-                const rows = data.table.rows.map(row => row.c.map(cell => cell ? (cell.v || '') : ''));
-                const headers = data.table.cols.map(col => col.label || '');
-                const tableData = [headers, ...rows];
+                const csvText = await response.text();
+                const tableData = parseCSV(csvText);
 
                 document.getElementById('tableContainer').innerHTML = '';
 
                 if (sheetIndex === 0) {
-                    // Render đặc biệt cho tab 1: headings ngoài, bảng chỉ inclusion + price
+                    // Render đặc biệt cho tab 1
                     renderCustomTab1(tableData);
                 } else {
                     // Render bảng đầy đủ cho các tab khác
@@ -70,8 +65,14 @@
                 document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
                 document.querySelectorAll('.nav-link')[sheetIndex].classList.add('active');
             } catch (error) {
-                document.getElementById('tableContainer').innerHTML = `<p>Lỗi khi load dữ liệu: ${error.message}. Kiểm tra publish và gid.</p>`;
+                document.getElementById('tableContainer').innerHTML = `<p>Lỗi khi load dữ liệu: ${error.message}. Kiểm tra quyền share public của sheet.</p>`;
             }
+        }
+
+        // Hàm parse CSV thành array 2D
+        function parseCSV(csv) {
+            const lines = csv.split(/\r?\n/);
+            return lines.map(line => line.split(',').map(cell => cell.trim().replace(/^"|"$/g, '')));
         }
 
         // Hàm render đặc biệt cho tab 1
@@ -92,19 +93,19 @@
                 const inclusion = row[3] || '';
                 const price = row[4] || '';
 
-                const tourFull = tourName + ' (Code: ' + tourCode + ')';
+                const tourFull = tourName + (tourCode ? ' (Code: ' + tourCode + ')' : '');
 
-                if (region !== currentRegion && region) {
-                    if (table) container.appendChild(table); // Close table cũ nếu có
+                if (region && region !== currentRegion) {
+                    if (table) container.appendChild(table);
                     const h2 = document.createElement('h2');
                     h2.textContent = region;
                     container.appendChild(h2);
                     currentRegion = region;
-                    currentTour = ''; // Reset tour
+                    currentTour = '';
                 }
 
-                if (tourFull !== currentTour && tourName) {
-                    if (table) container.appendChild(table); // Close table cũ
+                if (tourName && tourFull !== currentTour) {
+                    if (table) container.appendChild(table);
                     const h3 = document.createElement('h3');
                     h3.textContent = tourFull;
                     container.appendChild(h3);
@@ -128,7 +129,7 @@
                     currentTour = tourFull;
                 }
 
-                // Add row to table
+                // Add row to table nếu có inclusion
                 if (table && inclusion) {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `<td>${inclusion}</td><td>${price}</td>`;
@@ -136,7 +137,7 @@
                 }
             }
 
-            if (table) container.appendChild(table); // Close last table
+            if (table) container.appendChild(table);
         }
 
         // Tạo bảng đầy đủ cho các tab khác
