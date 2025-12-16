@@ -99,57 +99,43 @@
         function createAccordionForSheet1(data) {
             const accordion = document.createElement('div');
             accordion.className = 'accordion';
-            let mainId = 0;
-            let subId = 0;
-            let currentMain = '';
-            let currentSubTitle = '';
+            let currentMain = null;
+            let currentSub = null;
             let subTable = '';
-            for (let i = 1; i < data.length; i++) { // Skip header
+            for (let i = 1; i < data.length; i++) {
                 const row = data[i];
-                if (row.length < 2) continue; // Skip invalid
-                if (row[0] === '' && row[1].includes('package')) { // Main package
-                    if (currentMain && currentSubTitle && subTable) {
-                        currentSubTitle += createSubTable(subTable);
-                        currentMain += createSubAccordion(subId++, currentSubTitle);
+                if (row[1] && row[1].includes('package')) { // Main package
+                    if (currentSub) {
+                        currentSub.innerHTML += `<table class="table">${subTable}</table>`;
+                        currentMain.appendChild(currentSub);
                     }
-                    if (currentMain) accordion.appendChild(createMainAccordion(mainId++, currentMain));
-                    currentMain = `<div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#main${mainId}">${row[1]}</button></h2><div id="main${mainId}" class="accordion-collapse collapse show"><div class="accordion-body"><div class="accordion">`;
-                    currentSubTitle = '';
+                    currentMain = document.createElement('div');
+                    currentMain.className = 'accordion-item';
+                    currentMain.innerHTML = `<h2 class="accordion-header"><button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#main${mainId}">${row[1]}</button></h2><div id="main${mainId}" class="accordion-collapse collapse show"><div class="accordion">`;
+                    accordion.appendChild(currentMain);
+                    currentSub = null;
                     subTable = '';
-                    subId = 0;
-                } else if (row[0] !== '' && row[1]) { // Sub-tour
-                    if (currentSubTitle && subTable) currentSubTitle += createSubTable(subTable);
-                    if (currentSubTitle) currentMain += createSubAccordion(subId++, currentSubTitle);
-                    currentSubTitle = `<h2 class="accordion-header"><button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#sub${subId}">- ${row[0]}</button></h2><div id="sub${subId}" class="accordion-collapse collapse"><div class="accordion-body">`;
-                    subTable = '<table class="table"><tr><th>Tour Itinerary</th><th>Inclusions</th><th>Price (VND)</th></tr><tr>';
-                    subTable += createTd(row[1]) + createTd(row[2]) + createTd(row[3]) + '</tr>';
-                } else if (row[0] === '' && row[1]) { // Details
-                    subTable += '<tr>' + createTd(row[1]) + createTd(row[2]) + createTd(row[3]) + '</tr>';
+                    mainId++;
+                } else if (row[0] && row[0].includes('-')) { // Sub-tour
+                    if (currentSub) {
+                        currentSub.innerHTML += `<table class="table">${subTable}</table>`;
+                        currentMain.appendChild(currentSub);
+                    }
+                    currentSub = document.createElement('div');
+                    currentSub.className = 'accordion-item';
+                    currentSub.innerHTML = `<h2 class="accordion-header"><button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#sub${subId}">- ${row[0]}</button></h2><div id="sub${subId}" class="accordion-collapse collapse"><div class="accordion-body">`;
+                    subTable = '<tr><th>Tour Itinerary</th><th>Inclusions</th><th>Price (VND)</th></tr>';
+                    subId++;
+                } else if (row[1] && !row[1].includes('Tour Itinerary')) { // Details, skip header
+                    let link = row[1].startsWith('http') ? `<a href="${row[1]}" target="_blank">View Itinerary</a>` : row[1];
+                    subTable += `<tr><td>${link}</td><td>${row[2] || ''}</td><td>${row[3] || ''}</td></tr>`;
                 }
             }
-            if (currentSubTitle && subTable) currentSubTitle += createSubTable(subTable);
-            if (currentSubTitle) currentMain += createSubAccordion(subId, currentSubTitle);
-            if (currentMain) accordion.innerHTML += currentMain + '</div></div></div></div>';
+            if (currentSub) {
+                currentSub.innerHTML += `<table class="table">${subTable}</table>`;
+                currentMain.appendChild(currentSub);
+            }
             return accordion;
-        }
-
-        function createSubTable(table) {
-            return table + '</table>';
-        }
-
-        function createSubAccordion(id, content) {
-            return `<div class="accordion-item">${content}</div></div>`;
-        }
-
-        function createMainAccordion(id, content) {
-            const item = document.createElement('div');
-            item.innerHTML = content + '</div></div></div>';
-            return item;
-        }
-
-        function createTd(cell) {
-            if (cell && cell.startsWith('http')) cell = `<a href="${cell}" target="_blank">View Itinerary</a>`;
-            return `<td>${cell || ''}</td>`;
         }
 
         // Bảng cho sheet 2+
@@ -164,7 +150,7 @@
                     else td.textContent = cell;
                     tr.appendChild(td);
                 });
-                if (i > 0 && row[1] && row[1].trim() !== '' && row[2] && row[2].trim() !== '') { // Áp màu nếu có No. và Ranking
+                if (i > 0 && row[1] && row[1].trim() !== '' && row[2] && row[2].trim() !== '') { // Chỉ màu nếu có No. (row[1])
                     if (row[2].includes('3')) tr.classList.add('row-3star');
                     else if (row[2].includes('4')) tr.classList.add('row-4star');
                     else if (row[2].includes('5')) tr.classList.add('row-5star');
