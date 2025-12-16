@@ -102,79 +102,30 @@
             let mainId = 0;
             let subId = 0;
             let currentMain = '';
-            let currentSub = '';
+            let currentSubTitle = '';
             let subTable = '';
-            data.forEach((row, i) => {
-                if (i === 0) return; // Skip header
-                if (row[0] === '' && row[1] && row[1].includes('package')) { // Main package
-                    if (currentMain) accordion.appendChild(createMainAccordion(mainId++, currentMain, currentSub));
-                    currentMain = row[1].trim();
-                    currentSub = '';
+            for (let i = 1; i < data.length; i++) { // Skip header
+                const row = data[i];
+                if (row.length < 2) continue; // Skip invalid
+                if (row[0] === '' && row[1].includes('package')) { // Main package
+                    if (currentMain && currentSubTitle && subTable) {
+                        currentSubTitle += createSubTable(subTable);
+                        currentMain += createSubAccordion(subId++, currentSubTitle);
+                    }
+                    if (currentMain) accordion.appendChild(createMainAccordion(mainId++, currentMain));
+                    currentMain = `<div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#main${mainId}">${row[1]}</button></h2><div id="main${mainId}" class="accordion-collapse collapse show"><div class="accordion-body"><div class="accordion">`;
+                    currentSubTitle = '';
                     subTable = '';
-                } else if (row[0] && row[0].startsWith('"')) { // Sub-tour (bắt đầu bằng ")
-                    if (subTable) currentSub += createSubAccordion(subId++, row[0].replace(/"/g, ''), subTable); // Sử dụng row[0] làm title sub
-                    subTable = '<table class="table"><tr><th>Tour Itinerary</th><th>Inclusions</th><th>Price (VND)</th></tr>';
-                } else if (row[0] === '' && (row[3] || row[4])) { // Details (link in row[3], inclusions in row[4], price in row[5])
-                    subTable += createRow([row[3], row[4], row[5]]);
+                    subId = 0;
+                } else if (row[0] !== '' && row[1]) { // Sub-tour
+                    if (currentSubTitle && subTable) currentSubTitle += createSubTable(subTable);
+                    if (currentSubTitle) currentMain += createSubAccordion(subId++, currentSubTitle);
+                    currentSubTitle = `<h2 class="accordion-header"><button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#sub${subId}">- ${row[0]}</button></h2><div id="sub${subId}" class="accordion-collapse collapse"><div class="accordion-body">`;
+                    subTable = '<table class="table"><tr><th>Tour Itinerary</th><th>Inclusions</th><th>Price (VND)</th></tr><tr>';
+                    subTable += createTd(row[1]) + createTd(row[2]) + createTd(row[3]) + '</tr>';
+                } else if (row[0] === '' && row[1]) { // Details
+                    subTable += '<tr>' + createTd(row[1]) + createTd(row[2]) + createTd(row[3]) + '</tr>';
                 }
-            });
-            if (subTable) currentSub += createSubAccordion(subId, 'Last Tour', subTable); // Đóng sub cuối
-            if (currentMain) accordion.appendChild(createMainAccordion(mainId, currentMain, currentSub));
-            return accordion;
-        }
-
-        function createMainAccordion(id, title, subs) {
-            const item = document.createElement('div');
-            item.className = 'accordion-item';
-            item.innerHTML = `
-                <h2 class="accordion-header"><button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#main${id}">${title}</button></h2>
-                <div id="main${id}" class="accordion-collapse collapse show"><div class="accordion" style="padding: 10px;">${subs}</div></div>
-            `;
-            return item;
-        }
-
-        function createSubAccordion(id, title, table) {
-            return `
-                <div class="accordion-item">
-                    <h2 class="accordion-header"><button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#sub${id}">- ${title}</button></h2>
-                    <div id="sub${id}" class="accordion-collapse collapse"><div class="accordion-body">${table}</table></div></div>
-                </div>
-            `;
-        }
-
-        // Bảng cho sheet 2+
-        function createTableForOtherSheets(data, index) {
-            const table = document.createElement('table');
-            table.className = 'table table-bordered table-hover';
-            data.forEach((row, i) => {
-                const tr = document.createElement('tr');
-                row.forEach((cell, j) => {
-                    const td = document.createElement(i === 0 ? 'th' : 'td');
-                    if (cell.startsWith('http')) td.innerHTML = `<a href="${cell}" target="_blank">View Website</a>`;
-                    else td.textContent = cell;
-                    tr.appendChild(td);
-                });
-                if (i > 0 && row[2] && row[2].trim() !== '' && row[1] && row[1].trim() !== '') { // Không màu nếu là group header (row[1] rỗng hoặc không có số No.)
-                    if (row[2].includes('3')) tr.classList.add('row-3star');
-                    else if (row[2].includes('4')) tr.classList.add('row-4star');
-                    else if (row[2].includes('5')) tr.classList.add('row-5star');
-                }
-                table.appendChild(tr);
-            });
-            return table;
-        }
-
-        function createRow(row) {
-            let tr = '<tr>';
-            row.forEach(cell => {
-                if (cell && cell.startsWith('http')) cell = `<a href="${cell}" target="_blank">View Itinerary</a>`;
-                tr += `<td>${cell || ''}</td>`;
-            });
-            return tr + '</tr>';
-        }
-
-        loadSheet(0);
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+            }
+            if (currentSubTitle && subTable) currentSubTitle += createSubTable(subTable);
+            if (currentSubTitle) currentMain += createSubAccordion(subId, currentSub
