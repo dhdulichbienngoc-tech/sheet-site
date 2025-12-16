@@ -17,10 +17,10 @@
         .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         .table th { background-color: #f2f2f2; }
         .table tr:hover { background-color: #f1f1f1; }
-        /* Màu từ Sheet */
-        .row-3star { background-color: #90EE90; } /* Xanh lá */
-        .row-4star { background-color: #ADD8E6; } /* Xanh dương */
-        .row-5star { background-color: #FFB6C1; } /* Đỏ hồng */
+        /* Màu nhạt */
+        .row-3star { background-color: #d4edda; } /* Xanh lá nhạt */
+        .row-4star { background-color: #d1ecf1; } /* Xanh dương nhạt */
+        .row-5star { background-color: #f8d7da; } /* Đỏ hồng nhạt */
         /* Chat bubbles */
         .chat-bubbles { position: fixed; bottom: 20px; right: 20px; flex-direction: column; gap: 10px; z-index: 1000; }
         .chat-icon { background-color: #25D366; color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); animation: bounce 2s infinite; }
@@ -38,6 +38,7 @@
 
     <!-- Bong bóng liên hệ -->
     <div class="chat-bubbles d-flex">
+        <a href="tel:+84905297092" class="chat-icon phone"><i class="fas fa-phone fa-lg"></i></a>
         <a href="https://wa.me/84905297092" target="_blank" class="chat-icon"><i class="fab fa-whatsapp fa-lg"></i></a>
         <a href="https://zalo.me/84905297092" target="_blank" class="chat-icon zalo"><i class="fa-solid fa-comment-dots fa-lg"></i></a>
     </div>
@@ -105,20 +106,19 @@
             let subTable = '';
             data.forEach((row, i) => {
                 if (i === 0) return; // Skip header
-                if (row.length <= 1 || (row[0] && !row[1])) { // Main package (single cell or cell[1] rỗng)
+                if (row[0] === '' && row[1] && row[1].includes('package')) { // Main package
                     if (currentMain) accordion.appendChild(createMainAccordion(mainId++, currentMain, currentSub));
-                    currentMain = row[0];
+                    currentMain = row[1].trim();
                     currentSub = '';
                     subTable = '';
-                } else if (row[0] && row[1]) { // Sub-tour (tour name in cell[0], link in cell[1])
-                    if (subTable) currentSub += createSubAccordion(subId++, subTable);
+                } else if (row[0] && row[0].startsWith('"')) { // Sub-tour (bắt đầu bằng ")
+                    if (subTable) currentSub += createSubAccordion(subId++, row[0].replace(/"/g, ''), subTable); // Sử dụng row[0] làm title sub
                     subTable = '<table class="table"><tr><th>Tour Itinerary</th><th>Inclusions</th><th>Price (VND)</th></tr>';
-                    subTable += createRow(row.slice(1)); // Link, Inclusions, Price
-                } else if (row[0] === '') { // Details row (cell[0] blank)
-                    subTable += createRow(row.slice(1));
+                } else if (row[0] === '' && (row[3] || row[4])) { // Details (link in row[3], inclusions in row[4], price in row[5])
+                    subTable += createRow([row[3], row[4], row[5]]);
                 }
             });
-            if (subTable) currentSub += createSubAccordion(subId, subTable);
+            if (subTable) currentSub += createSubAccordion(subId, 'Last Tour', subTable); // Đóng sub cuối
             if (currentMain) accordion.appendChild(createMainAccordion(mainId, currentMain, currentSub));
             return accordion;
         }
@@ -133,10 +133,10 @@
             return item;
         }
 
-        function createSubAccordion(id, table) {
+        function createSubAccordion(id, title, table) {
             return `
                 <div class="accordion-item">
-                    <h2 class="accordion-header"><button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#sub${id}">+ Tour Details</button></h2>
+                    <h2 class="accordion-header"><button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#sub${id}">- ${title}</button></h2>
                     <div id="sub${id}" class="accordion-collapse collapse"><div class="accordion-body">${table}</table></div></div>
                 </div>
             `;
@@ -154,7 +154,7 @@
                     else td.textContent = cell;
                     tr.appendChild(td);
                 });
-                if (i > 0 && row[2] && row[2].trim() !== '') { // row[2] is Ranking
+                if (i > 0 && row[2] && row[2].trim() !== '' && row[1] && row[1].trim() !== '') { // Không màu nếu là group header (row[1] rỗng hoặc không có số No.)
                     if (row[2].includes('3')) tr.classList.add('row-3star');
                     else if (row[2].includes('4')) tr.classList.add('row-4star');
                     else if (row[2].includes('5')) tr.classList.add('row-5star');
@@ -167,8 +167,8 @@
         function createRow(row) {
             let tr = '<tr>';
             row.forEach(cell => {
-                if (cell.startsWith('http')) cell = `<a href="${cell}" target="_blank">View Itinerary</a>`;
-                tr += `<td>${cell}</td>`;
+                if (cell && cell.startsWith('http')) cell = `<a href="${cell}" target="_blank">View Itinerary</a>`;
+                tr += `<td>${cell || ''}</td>`;
             });
             return tr + '</tr>';
         }
