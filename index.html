@@ -16,7 +16,7 @@
         .table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
         .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         .table th { background-color: #f2f2f2; }
-        .table tr:hover { background-color: #f1f1f1; } /* Hover effect */
+        .table tr:hover { background-color: #f1f1f1; }
         /* Màu từ Sheet */
         .row-3star { background-color: #90EE90; } /* Xanh lá */
         .row-4star { background-color: #ADD8E6; } /* Xanh dương */
@@ -39,7 +39,7 @@
     <!-- Bong bóng liên hệ -->
     <div class="chat-bubbles d-flex">
         <a href="https://wa.me/84905297092" target="_blank" class="chat-icon"><i class="fab fa-whatsapp fa-lg"></i></a>
-        <a href="https://zalo.me/84905297092" target="_blank" class="chat-icon zalo"><i class="fa-solid fa-comment-dots fa-lg"></i></a> <!-- Icon cho Zalo -->
+        <a href="https://zalo.me/84905297092" target="_blank" class="chat-icon zalo"><i class="fa-solid fa-comment-dots fa-lg"></i></a>
     </div>
 
     <script>
@@ -94,49 +94,55 @@
             }
         }
 
-        // Accordion cho sheet 1 (giống tham khảo)
+        // Accordion cho sheet 1
         function createAccordionForSheet1(data) {
             const accordion = document.createElement('div');
             accordion.className = 'accordion';
-            let id = 0;
-            let currentPackage = '';
+            let mainId = 0;
+            let subId = 0;
+            let currentMain = '';
             let currentSub = '';
-            let subBody = '';
+            let subTable = '';
             data.forEach((row, i) => {
                 if (i === 0) return; // Skip header
-                if (row[0].includes('package')) { // Header chính như "Northern Vietnam package"
-                    if (currentPackage) accordion.appendChild(createMainAccordion(id++, currentPackage, currentSub));
-                    currentPackage = row[0];
+                if (row.length <= 1 || (row[0] && !row[1])) { // Main package (single cell or cell[1] rỗng)
+                    if (currentMain) accordion.appendChild(createMainAccordion(mainId++, currentMain, currentSub));
+                    currentMain = row[0];
                     currentSub = '';
-                } else if (row[0] && row[0].trim() !== '') { // Sub-tour như "HA NOI DISCOVERY"
-                    if (currentSub) currentSub += createSubDetails(subBody);
-                    currentSub = `<h2 class="accordion-header"><button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#sub${id}">${row[0]}</button></h2>`;
-                    subBody = '<div class="accordion-body"><table class="table">';
-                    subBody += createRow(row, true); // Header sub
-                } else {
-                    subBody += createRow(row);
+                    subTable = '';
+                } else if (row[0] && row[1]) { // Sub-tour (tour name in cell[0], link in cell[1])
+                    if (subTable) currentSub += createSubAccordion(subId++, subTable);
+                    subTable = '<table class="table"><tr><th>Tour Itinerary</th><th>Inclusions</th><th>Price (VND)</th></tr>';
+                    subTable += createRow(row.slice(1)); // Link, Inclusions, Price
+                } else if (row[0] === '') { // Details row (cell[0] blank)
+                    subTable += createRow(row.slice(1));
                 }
             });
-            if (currentSub) currentSub += createSubDetails(subBody);
-            if (currentPackage) accordion.appendChild(createMainAccordion(id, currentPackage, currentSub));
+            if (subTable) currentSub += createSubAccordion(subId, subTable);
+            if (currentMain) accordion.appendChild(createMainAccordion(mainId, currentMain, currentSub));
             return accordion;
         }
 
-        function createMainAccordion(id, title, body) {
+        function createMainAccordion(id, title, subs) {
             const item = document.createElement('div');
             item.className = 'accordion-item';
             item.innerHTML = `
                 <h2 class="accordion-header"><button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#main${id}">${title}</button></h2>
-                <div id="main${id}" class="accordion-collapse collapse show"><div class="accordion-body">${body}</div></div>
+                <div id="main${id}" class="accordion-collapse collapse show"><div class="accordion" style="padding: 10px;">${subs}</div></div>
             `;
             return item;
         }
 
-        function createSubDetails(body) {
-            return body + '</table></div>';
+        function createSubAccordion(id, table) {
+            return `
+                <div class="accordion-item">
+                    <h2 class="accordion-header"><button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#sub${id}">+ Tour Details</button></h2>
+                    <div id="sub${id}" class="accordion-collapse collapse"><div class="accordion-body">${table}</table></div></div>
+                </div>
+            `;
         }
 
-        // Bảng cho sheet 2+ với màu
+        // Bảng cho sheet 2+
         function createTableForOtherSheets(data, index) {
             const table = document.createElement('table');
             table.className = 'table table-bordered table-hover';
@@ -148,22 +154,21 @@
                     else td.textContent = cell;
                     tr.appendChild(td);
                 });
-                // Áp màu dựa trên cột Ranking (cột 2, index 1)
-                if (i > 0 && row[2]) { // Giả định cột Ranking là cột 3 (index 2)
-                    if (row[2].includes('3*')) tr.classList.add('row-3star');
-                    else if (row[2].includes('4*')) tr.classList.add('row-4star');
-                    else if (row[2].includes('5*')) tr.classList.add('row-5star');
+                if (i > 0 && row[2] && row[2].trim() !== '') { // row[2] is Ranking
+                    if (row[2].includes('3')) tr.classList.add('row-3star');
+                    else if (row[2].includes('4')) tr.classList.add('row-4star');
+                    else if (row[2].includes('5')) tr.classList.add('row-5star');
                 }
                 table.appendChild(tr);
             });
             return table;
         }
 
-        function createRow(row, isHeader = false) {
+        function createRow(row) {
             let tr = '<tr>';
             row.forEach(cell => {
                 if (cell.startsWith('http')) cell = `<a href="${cell}" target="_blank">View Itinerary</a>`;
-                tr += isHeader ? `<th>${cell}</th>` : `<td>${cell}</td>`;
+                tr += `<td>${cell}</td>`;
             });
             return tr + '</tr>';
         }
