@@ -3,31 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Site từ Google Sheet</title>
+    <title>Blue Ocean 2026</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script> <!-- Thư viện parse CSV -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> <!-- Font Awesome cho icons -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script> <!-- Parse CSV -->
     <style>
-        body { padding: 20px; }
-        .nav-link.active { font-weight: bold; }
+        body { padding: 20px; background-color: #f8f9fa; }
+        .container { max-width: 1200px; margin: auto; } /* Thu hẹp 2 bên */
+        .nav-pills .nav-link { background-color: #e9ecef; color: #0d6efd; border-radius: 20px; margin-right: 5px; }
+        .nav-pills .nav-link.active { background-color: #0d6efd; color: white; font-weight: bold; }
+        .accordion-button { font-weight: bold; color: #0d6efd; }
+        .accordion-body table { width: 100%; }
+        /* Chat bubbles fixed bottom-right */
+        .chat-bubbles { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; z-index: 1000; }
+        .chat-icon { background-color: #25D366; color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); animation: bounce 2s infinite; }
+        .chat-icon.phone { background-color: #007bff; }
+        .chat-icon.zalo { background-color: #0088ff; }
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px); } 60% { transform: translateY(-5px); } }
     </style>
 </head>
 <body>
-    <h1 class="text-center">Dữ liệu từ Google Sheet</h1>
-    <ul class="nav nav-tabs" id="sheetTabs">
-        <!-- Navigation sẽ được JS thêm động -->
-    </ul>
-    <div id="tableContainer" class="mt-4"></div>
+    <div class="container">
+        <h1 class="text-center mb-4" style="color: #0d6efd;">Blue Ocean 2026</h1>
+        <ul class="nav nav-pills mb-4 justify-content-center" id="sheetTabs">
+            <!-- Navigation động -->
+        </ul>
+        <div id="tableContainer"></div>
+    </div>
+
+    <!-- Bong bóng liên hệ -->
+    <div class="chat-bubbles">
+        <a href="tel:+84905297092" class="chat-icon phone"><i class="fas fa-phone fa-lg"></i></a>
+        <a href="https://wa.me/84905297092" target="_blank" class="chat-icon"><i class="fab fa-whatsapp fa-lg"></i></a>
+        <a href="https://zalo.me/84905297092" target="_blank" class="chat-icon zalo"><i class="fab fa-zalo fa-lg"></i></a> <!-- Nếu có icon Zalo, thay bằng class phù hợp -->
+    </div>
 
     <script>
         const sheetNames = ['Blue Ocean Itinerary Price details', 'Northern HOTEL', 'Central HOTEL', 'Southern HOTEL', 'Halong Cruise', 'Restaurant', 'Contact'];
-        const csvLinks = [ // THAY BẰNG LINK CSV THỰC CỦA BẠN, THEO THỨ TỰ SHEET NAMES
-            'https://docs.google.com/spreadsheets/d/e/2PACX-1vSVY8H9-kxm9ywjaJNbZibgqud97ulwH8V0Q1K3o2ddEihkhJmb5ThXxjJDShJZaeTLQAwOumdB5X1b/pub?gid=1808798930&single=true&output=csv', // Cho sheet 1
-            'https://docs.google.com/spreadsheets/d/e/2PACX-1vSVY8H9-kxm9ywjaJNbZibgqud97ulwH8V0Q1K3o2ddEihkhJmb5ThXxjJDShJZaeTLQAwOumdB5X1b/pub?gid=943202508&single=true&output=csv', // Cho sheet 2
-            'https://docs.google.com/spreadsheets/d/e/2PACX-1vSVY8H9-kxm9ywjaJNbZibgqud97ulwH8V0Q1K3o2ddEihkhJmb5ThXxjJDShJZaeTLQAwOumdB5X1b/pub?gid=1545924102&single=true&output=csv', // Cho sheet 3
-            'https://docs.google.com/spreadsheets/d/e/2PACX-1vSVY8H9-kxm9ywjaJNbZibgqud97ulwH8V0Q1K3o2ddEihkhJmb5ThXxjJDShJZaeTLQAwOumdB5X1b/pub?gid=1159680108&single=true&output=csv', // Cho sheet 4
-            'https://docs.google.com/spreadsheets/d/e/2PACX-1vSVY8H9-kxm9ywjaJNbZibgqud97ulwH8V0Q1K3o2ddEihkhJmb5ThXxjJDShJZaeTLQAwOumdB5X1b/pub?gid=315991677&single=true&output=csv', // Cho sheet 5
-            'https://docs.google.com/spreadsheets/d/e/2PACX-1vSVY8H9-kxm9ywjaJNbZibgqud97ulwH8V0Q1K3o2ddEihkhJmb5ThXxjJDShJZaeTLQAwOumdB5X1b/pub?gid=116299310&single=true&output=csv', // Cho sheet 6
-            'https://docs.google.com/spreadsheets/d/e/2PACX-1vSVY8H9-kxm9ywjaJNbZibgqud97ulwH8V0Q1K3o2ddEihkhJmb5ThXxjJDShJZaeTLQAwOumdB5X1b/pub?gid=1650609520&single=true&output=csv' // Cho sheet 7
+        const csvLinks = [ // THAY BẰNG LINK CSV THỰC CỦA BẠN
+            'https://docs.google.com/spreadsheets/d/e/2PACX-1vSVY8H9-kxm9ywjaJNbZibgqud97ulwH8V0Q1K3o2ddEihkhJmb5ThXxjJDShJZaeTLQAwOumdB5X1b/pub?gid=1808798930&single=true&output=csv',
+            'https://docs.google.com/spreadsheets/d/e/2PACX-1vSVY8H9-kxm9ywjaJNbZibgqud97ulwH8V0Q1K3o2ddEihkhJmb5ThXxjJDShJZaeTLQAwOumdB5X1b/pub?gid=943202508&single=true&output=csv',
+            'https://docs.google.com/spreadsheets/d/e/2PACX-1vSVY8H9-kxm9ywjaJNbZibgqud97ulwH8V0Q1K3o2ddEihkhJmb5ThXxjJDShJZaeTLQAwOumdB5X1b/pub?gid=1545924102&single=true&output=csv',
+            'https://docs.google.com/spreadsheets/d/e/2PACX-1vSVY8H9-kxm9ywjaJNbZibgqud97ulwH8V0Q1K3o2ddEihkhJmb5ThXxjJDShJZaeTLQAwOumdB5X1b/pub?gid=1159680108&single=true&output=csv',
+            'https://docs.google.com/spreadsheets/d/e/2PACX-1vSVY8H9-kxm9ywjaJNbZibgqud97ulwH8V0Q1K3o2ddEihkhJmb5ThXxjJDShJZaeTLQAwOumdB5X1b/pub?gid=315991677&single=true&output=csv',
+            'https://docs.google.com/spreadsheets/d/e/2PACX-1vSVY8H9-kxm9ywjaJNbZibgqud97ulwH8V0Q1K3o2ddEihkhJmb5ThXxjJDShJZaeTLQAwOumdB5X1b/pub?gid=116299310&single=true&output=csv',
+            'https://docs.google.com/spreadsheets/d/e/2PACX-1vSVY8H9-kxm9ywjaJNbZibgqud97ulwH8V0Q1K3o2ddEihkhJmb5ThXxjJDShJZaeTLQAwOumdB5X1b/pub?gid=1650609520&single=true&output=csv'
         ];
 
         // Tạo navigation
@@ -44,46 +64,80 @@
             tabs.appendChild(li);
         });
 
-        // Hàm load dữ liệu sheet từ CSV
+        // Hàm load dữ liệu và tạo accordion
         async function loadSheet(sheetIndex) {
             const url = csvLinks[sheetIndex];
             try {
                 const response = await fetch(url);
-                if (!response.ok) {
-                    throw new Error(`Lỗi: ${response.status} - ${response.statusText}`);
-                }
+                if (!response.ok) throw new Error(`Lỗi: ${response.status}`);
                 const csvText = await response.text();
-                const data = Papa.parse(csvText, {header: false, skipEmptyLines: true}).data; // Parse CSV thành array
-                const table = createTable(data);
-                document.getElementById('tableContainer').innerHTML = '';
-                document.getElementById('tableContainer').appendChild(table);
+                const data = Papa.parse(csvText, {header: false, skipEmptyLines: true}).data;
 
-                // Update active tab
+                const accordionContainer = document.createElement('div');
+                accordionContainer.className = 'accordion';
+                let currentAccordionId = 0;
+                let currentBody = '';
+
+                data.forEach((row, i) => {
+                    if (i === 0) return; // Skip header nếu cần
+                    if (row[0] && row[0].trim() !== '') { // Giả định hàng mới là header package
+                        if (currentBody) { // Đóng accordion trước
+                            addAccordion(accordionContainer, currentAccordionId - 1, currentBody);
+                            currentBody = '';
+                        }
+                        currentAccordionId++;
+                        currentBody += createTableRow(row, true); // Header row
+                    } else {
+                        currentBody += createTableRow(row);
+                    }
+                });
+                if (currentBody) addAccordion(accordionContainer, currentAccordionId, currentBody); // Đóng cuối
+
+                document.getElementById('tableContainer').innerHTML = '';
+                document.getElementById('tableContainer').appendChild(accordionContainer);
+
                 document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
                 document.querySelectorAll('.nav-link')[sheetIndex].classList.add('active');
             } catch (error) {
-                document.getElementById('tableContainer').innerHTML = `<p>Lỗi khi load dữ liệu: ${error.message}. Kiểm tra link CSV.</p>`;
+                document.getElementById('tableContainer').innerHTML = `<p>Lỗi: ${error.message}</p>`;
             }
         }
 
-        // Tạo bảng từ dữ liệu
-        function createTable(data) {
-            const table = document.createElement('table');
-            table.className = 'table table-striped table-bordered';
-            data.forEach((row, i) => {
-                const tr = document.createElement('tr');
-                row.forEach(cell => {
-                    const td = document.createElement(i === 0 ? 'th' : 'td');
-                    td.textContent = cell;
-                    tr.appendChild(td);
-                });
-                table.appendChild(tr);
+        // Tạo row table với link clickable
+        function createTableRow(row, isHeader = false) {
+            let tr = '<tr>';
+            row.forEach(cell => {
+                if (cell.startsWith('http')) { // Thu gọn link
+                    cell = `<a href="${cell}" target="_blank">View Itinerary</a>`;
+                }
+                tr += isHeader ? `<th>${cell}</th>` : `<td>${cell}</td>`;
             });
-            return table;
+            tr += '</tr>';
+            return tr;
         }
 
-        // Load sheet đầu tiên
+        // Thêm accordion item
+        function addAccordion(container, id, body) {
+            const item = document.createElement('div');
+            item.className = 'accordion-item';
+            item.innerHTML = `
+                <h2 class="accordion-header" id="heading${id}">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${id}">
+                        Package ${id}
+                    </button>
+                </h2>
+                <div id="collapse${id}" class="accordion-collapse collapse" data-bs-parent=".accordion">
+                    <div class="accordion-body">
+                        <table class="table table-striped">${body}</table>
+                    </div>
+                </div>
+            `;
+            container.appendChild(item);
+        }
+
+        // Load sheet đầu
         loadSheet(0);
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script> <!-- Bootstrap JS cho accordion -->
 </body>
 </html>
