@@ -128,4 +128,54 @@
                 }
             }
             if (currentSubTitle && subTable) currentSubTitle += createSubTable(subTable);
-            if (currentSubTitle) currentMain += createSubAccordion(subId, currentSub
+            if (currentSubTitle) currentMain += createSubAccordion(subId, currentSubTitle);
+            if (currentMain) accordion.innerHTML += currentMain + '</div></div></div></div>';
+            return accordion;
+        }
+
+        function createSubTable(table) {
+            return table + '</table>';
+        }
+
+        function createSubAccordion(id, content) {
+            return `<div class="accordion-item">${content}</div></div>`;
+        }
+
+        function createMainAccordion(id, content) {
+            const item = document.createElement('div');
+            item.innerHTML = content + '</div></div></div>';
+            return item;
+        }
+
+        function createTd(cell) {
+            if (cell && cell.startsWith('http')) cell = `<a href="${cell}" target="_blank">View Itinerary</a>`;
+            return `<td>${cell || ''}</td>`;
+        }
+
+        // Bảng cho sheet 2+
+        function createTableForOtherSheets(data, index) {
+            const table = document.createElement('table');
+            table.className = 'table table-bordered table-hover';
+            data.forEach((row, i) => {
+                const tr = document.createElement('tr');
+                row.forEach((cell, j) => {
+                    const td = document.createElement(i === 0 ? 'th' : 'td');
+                    if (cell.startsWith('http')) td.innerHTML = `<a href="${cell}" target="_blank">View Website</a>`;
+                    else td.textContent = cell;
+                    tr.appendChild(td);
+                });
+                if (i > 0 && row[1] && row[1].trim() !== '' && row[2] && row[2].trim() !== '') { // Áp màu nếu có No. và Ranking
+                    if (row[2].includes('3')) tr.classList.add('row-3star');
+                    else if (row[2].includes('4')) tr.classList.add('row-4star');
+                    else if (row[2].includes('5')) tr.classList.add('row-5star');
+                }
+                table.appendChild(tr);
+            });
+            return table;
+        }
+
+        loadSheet(0);
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
