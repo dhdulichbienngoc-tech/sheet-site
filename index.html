@@ -3,56 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blue Ocean 2026</title>
+    <title>BẢNG GIÁ ĐẠI LÝ BLUE OCEAN TRAVEL 2026</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
-        body { padding: 20px; background-color: #f8f9fa; font-family: Arial, sans-serif; }
-        .container { max-width: 1200px; margin: auto; }
-        .nav-pills .nav-link { background-color: #e9ecef; color: #0d6efd; border-radius: 20px; margin: 0 5px; padding: 10px 20px; }
-        .nav-pills .nav-link.active { background-color: #0d6efd; color: white; }
-        .table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
-        .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        .table th { background-color: #f2f2f2; }
-        .table tr:hover { background-color: #f1f1f1; }
-        /* Màu nhạt cho tab 2+ */
-        .row-3star { background-color: #d4edda; } /* Xanh lá nhạt */
-        .row-4star { background-color: #d1ecf1; } /* Xanh dương nhạt */
-        .row-5star { background-color: #f8d7da; } /* Đỏ hồng nhạt */
-        /* Chat bubbles */
-        .chat-bubbles { position: fixed; bottom: 20px; right: 20px; flex-direction: column; gap: 10px; z-index: 1000; }
-        .chat-icon { background-color: #25D366; color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); animation: bounce 2s infinite; }
-        .chat-icon.phone { background-color: #007bff; }
-        .chat-icon.zalo { background-color: #0088ff; }
-        @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px); } 60% { transform: translateY(-5px); } }
+        body { padding: 20px; }
+        .nav-link.active { font-weight: bold; }
+        h1, h2, h3, h4 { color: #333; }
+        table { margin-bottom: 20px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1 class="text-center mb-4" style="color: #0d6efd;">Blue Ocean 2026</h1>
-        <ul class="nav nav-pills mb-4 justify-content-center" id="sheetTabs"></ul>
-        <div id="tableContainer"></div>
-    </div>
-
-    <!-- Bong bóng liên hệ -->
-    <div class="chat-bubbles d-flex">
-        <a href="tel:+84905297092" class="chat-icon phone"><i class="fas fa-phone fa-lg"></i></a>
-        <a href="https://wa.me/84905297092" target="_blank" class="chat-icon"><i class="fab fa-whatsapp fa-lg"></i></a>
-        <a href="https://zalo.me/84905297092" target="_blank" class="chat-icon zalo"><i class="fa-solid fa-comment-dots fa-lg"></i></a>
-    </div>
+    <h1 class="text-center">BẢNG GIÁ ĐẠI LÝ BLUE OCEAN TRAVEL 2026</h1>
+    <ul class="nav nav-tabs" id="sheetTabs">
+        <!-- Navigation sẽ được JS thêm động -->
+    </ul>
+    <div id="tableContainer" class="mt-4"></div>
 
     <script>
-        const sheetNames = ['Blue Ocean Itinerary Price details', 'Northern HOTEL', 'Central HOTEL', 'Southern HOTEL', 'Halong Cruise', 'Restaurant', 'Contact'];
-        const csvLinks = [ // THAY BẰNG LINK CSV THỰC
-            'https://docs.google.com/spreadsheets/d/e/2PACX-1vSVY8H9-kxm9ywjaJNbZibgqud97ulwH8V0Q1K3o2ddEihkhJmb5ThXxjJDShJZaeTLQAwOumdB5X1b/pub?gid=1808798930&single=true&output=csv',
-            'https://docs.google.com/spreadsheets/d/e/2PACX-1vSVY8H9-kxm9ywjaJNbZibgqud97ulwH8V0Q1K3o2ddEihkhJmb5ThXxjJDShJZaeTLQAwOumdB5X1b/pub?gid=943202508&single=true&output=csv',
-            'https://docs.google.com/spreadsheets/d/e/2PACX-1vSVY8H9-kxm9ywjaJNbZibgqud97ulwH8V0Q1K3o2ddEihkhJmb5ThXxjJDShJZaeTLQAwOumdB5X1b/pub?gid=1545924102&single=true&output=csv',
-            'https://docs.google.com/spreadsheets/d/e/2PACX-1vSVY8H9-kxm9ywjaJNbZibgqud97ulwH8V0Q1K3o2ddEihkhJmb5ThXxjJDShJZaeTLQAwOumdB5X1b/pub?gid=1159680108&single=true&output=csv',
-            'https://docs.google.com/spreadsheets/d/e/2PACX-1vSVY8H9-kxm9ywjaJNbZibgqud97ulwH8V0Q1K3o2ddEihkhJmb5ThXxjJDShJZaeTLQAwOumdB5X1b/pub?gid=315991677&single=true&output=csv',
-            'https://docs.google.com/spreadsheets/d/e/2PACX-1vSVY8H9-kxm9ywjaJNbZibgqud97ulwH8V0Q1K3o2ddEihkhJmb5ThXxjJDShJZaeTLQAwOumdB5X1b/pub?gid=116299310&single=true&output=csv',
-            'https://docs.google.com/spreadsheets/d/e/2PACX-1vSVY8H9-kxm9ywjaJNbZibgqud97ulwH8V0Q1K3o2ddEihkhJmb5ThXxjJDShJZaeTLQAwOumdB5X1b/pub?gid=1650609520&single=true&output=csv'
-        ];
+        const publishedId = '2PACX-1vSVY8H9-kxm9ywjaJNbZibgqud97ulwH8V0Q1K3o2ddEihkhJmb5ThXxjJDShJZaeTLQAwOumdB5X1b'; // Giữ nguyên
+        const sheetNames = ['Blue Ocean Itinerary Price details', 'Northern HOTEL', 'Central HOTEL', 'Southern HOTEL', 'Halong Cruise', 'Restaurant', 'Contact']; // Giữ nguyên
+        const gids = ['1808798930', '943202508', '1545924102', '1159680108', '315991677', '116299310', '1650609520']; // Giữ nguyên
 
         // Tạo navigation
         const tabs = document.getElementById('sheetTabs');
@@ -68,51 +38,125 @@
             tabs.appendChild(li);
         });
 
-        // Hàm load dữ liệu
+        // Hàm load dữ liệu sheet
         async function loadSheet(sheetIndex) {
-            const url = csvLinks[sheetIndex];
+            const sheetName = sheetNames[sheetIndex];
+            const gid = gids[sheetIndex];
+            const url = `https://docs.google.com/spreadsheets/d/e/${publishedId}/gviz/tq?gid=${gid}&tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
             try {
                 const response = await fetch(url);
-                if (!response.ok) throw new Error(`Lỗi: ${response.status}`);
-                const csvText = await response.text();
-                const data = Papa.parse(csvText, {header: false, skipEmptyLines: true}).data;
-
-                const content = createTable(data, sheetIndex > 0); // Bảng đơn giản, màu chỉ cho sheetIndex > 0
+                if (!response.ok) {
+                    throw new Error(`Lỗi: ${response.status} - ${response.statusText}`);
+                }
+                const text = await response.text();
+                const jsonString = text.match(/google.visualization.Query.setResponse\(([\s\S]*)\);/)[1];
+                const data = JSON.parse(jsonString);
+                const rows = data.table.rows.map(row => row.c.map(cell => cell ? (cell.v || '') : ''));
+                const headers = data.table.cols.map(col => col.label || '');
+                const tableData = [headers, ...rows];
 
                 document.getElementById('tableContainer').innerHTML = '';
-                document.getElementById('tableContainer').appendChild(content);
 
+                if (sheetIndex === 0) {
+                    // Render đặc biệt cho tab 1: headings ngoài, bảng chỉ inclusion + price
+                    renderCustomTab1(tableData);
+                } else {
+                    // Render bảng đầy đủ cho các tab khác
+                    const table = createTable(tableData);
+                    document.getElementById('tableContainer').appendChild(table);
+                }
+
+                // Update active tab
                 document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
                 document.querySelectorAll('.nav-link')[sheetIndex].classList.add('active');
             } catch (error) {
-                document.getElementById('tableContainer').innerHTML = `<p>Lỗi: ${error.message}</p>`;
+                document.getElementById('tableContainer').innerHTML = `<p>Lỗi khi load dữ liệu: ${error.message}. Kiểm tra publish và gid.</p>`;
             }
         }
 
-        // Hàm tạo bảng đơn giản, với màu cho sheet 2+
-        function createTable(data, applyColor) {
+        // Hàm render đặc biệt cho tab 1
+        function renderCustomTab1(data) {
+            const container = document.getElementById('tableContainer');
+            container.innerHTML += '<h2>BẢNG GIÁ DÀNH RIÊNG CHO ĐẠI LÝ BLUE OCEAN TRAVEL - 2026</h2>';
+            container.innerHTML += '<p>CHỈ DÀNH CHO ĐẠI LÝ - VUI LÒNG KHÔNG CHIA SẺ CÔNG KHAI!</p>';
+
+            let currentRegion = '';
+            let currentTour = '';
+            let table = null;
+
+            for (let i = 1; i < data.length; i++) { // Bỏ header row
+                const row = data[i];
+                const region = row[0] || '';
+                const tourName = row[1] || '';
+                const tourCode = row[2] || '';
+                const inclusion = row[3] || '';
+                const price = row[4] || '';
+
+                const tourFull = tourName + ' (Code: ' + tourCode + ')';
+
+                if (region !== currentRegion && region) {
+                    if (table) container.appendChild(table); // Close table cũ nếu có
+                    const h2 = document.createElement('h2');
+                    h2.textContent = region;
+                    container.appendChild(h2);
+                    currentRegion = region;
+                    currentTour = ''; // Reset tour
+                }
+
+                if (tourFull !== currentTour && tourName) {
+                    if (table) container.appendChild(table); // Close table cũ
+                    const h3 = document.createElement('h3');
+                    h3.textContent = tourFull;
+                    container.appendChild(h3);
+
+                    // Thêm Tour Itinerary chỉ cho tour cụ thể
+                    if (tourName.toUpperCase().includes('HA NOI DISCOVERY')) {
+                        const h4 = document.createElement('h4');
+                        h4.textContent = 'Tour Itinerary';
+                        container.appendChild(h4);
+                        const p = document.createElement('p');
+                        p.innerHTML = '<a href="https://drive.google.com/file/d/1W_q_j51gE5JZCGIw7Ak0YfMwlHVveD0_/view?usp=drive_link" target="_blank">Xem chi tiết itinerary (Google Drive)</a>';
+                        container.appendChild(p);
+                    }
+
+                    // Start new table
+                    table = document.createElement('table');
+                    table.className = 'table table-striped table-bordered';
+                    const thead = document.createElement('thead');
+                    thead.innerHTML = '<tr><th>Loại/Item</th><th>Giá (VND)</th></tr>';
+                    table.appendChild(thead);
+                    currentTour = tourFull;
+                }
+
+                // Add row to table
+                if (table && inclusion) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${inclusion}</td><td>${price}</td>`;
+                    table.appendChild(tr);
+                }
+            }
+
+            if (table) container.appendChild(table); // Close last table
+        }
+
+        // Tạo bảng đầy đủ cho các tab khác
+        function createTable(data) {
             const table = document.createElement('table');
-            table.className = 'table table-bordered table-hover';
+            table.className = 'table table-striped table-bordered';
             data.forEach((row, i) => {
                 const tr = document.createElement('tr');
-                row.forEach((cell, j) => {
+                row.forEach(cell => {
                     const td = document.createElement(i === 0 ? 'th' : 'td');
-                    if (cell.startsWith('http')) td.innerHTML = `<a href="${cell}" target="_blank">View Itinerary / Website</a>`;
-                    else td.textContent = cell;
+                    td.textContent = cell;
                     tr.appendChild(td);
                 });
-                if (applyColor && i > 0 && row[1] && row[1].trim() !== '' && row[2] && row[2].trim() !== '') { // Chỉ màu nếu có No. và Ranking
-                    if (row[2].includes('3')) tr.classList.add('row-3star');
-                    else if (row[2].includes('4')) tr.classList.add('row-4star');
-                    else if (row[2].includes('5')) tr.classList.add('row-5star');
-                }
                 table.appendChild(tr);
             });
             return table;
         }
 
+        // Load sheet đầu tiên
         loadSheet(0);
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
