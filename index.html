@@ -100,15 +100,15 @@
             const accordion = document.createElement('div');
             accordion.className = 'accordion';
             let mainId = 0;
+            let subId = 0;
             let currentMain = '';
             let currentSub = '';
             let subTable = '';
-            let subTitle = '';
             data.forEach((row, i) => {
                 if (i === 0) return; // Skip header
-                if (row[1] && row[1].includes('package')) { // Main package
+                if (row[0] === '' && row[1].includes('package')) { // Main package
                     if (currentSub) {
-                        currentSub += `<table class="table">${subTable}</table></div></div>`;
+                        currentSub += subTable + '</table></div></div>';
                         currentMain += currentSub + '</div></div>';
                     }
                     if (currentMain) accordion.innerHTML += currentMain;
@@ -116,26 +116,25 @@
                     mainId++;
                     currentSub = '';
                     subTable = '';
-                    subTitle = '';
-                } else if (row[0] && row[1] && !row[2]) { // Sub-tour title (row[0] title, row[1] blank? Wait, from sheet, row[0] = sub title, row[1] = Tour Itinerary header, but in CSV, header is separate
+                } else if (row[1] === 'Tour Itinerary') { // Sub-tour header
                     if (currentSub) {
-                        currentSub += `<table class="table">${subTable}</table></div></div>`;
+                        currentSub += subTable + '</table></div></div>';
                         currentMain += currentSub;
                     }
                     subTitle = row[0];
-                    currentSub = `<div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#sub${subId}">- ${subTitle}</button></h2><div id="sub${subId}" class="accordion-collapse collapse"><div class="accordion-body">`;
+                    currentSub = `<div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#sub${subId}">- ${subTitle}</button></h2><div id="sub${subId}" class="accordion-collapse collapse"><div class="accordion-body"><table class="table"><tr><th>Tour Itinerary</th><th>Inclusions</th><th>Price (VND)</th></tr>`;
                     subId++;
-                    subTable = '<tr><th>Tour Itinerary</th><th>Inclusions</th><th>Price (VND)</th></tr>';
-                } else if (row[0] === '' && row[1]) { // Details row (blank A, link in B, inclusion in C, price in D)
-                    let link = row[1].startsWith('http') ? `<a href="${row[1]}" target="_blank">View Itinerary</a>` : row[1];
+                    subTable = '';
+                } else if (row[0] === '' && row[1]) { // Details row
+                    let link = row[1].startswith('http') ? `<a href="${row[1]}" target="_blank">View Itinerary</a>` : row[1];
                     subTable += `<tr><td>${link}</td><td>${row[2] || ''}</td><td>${row[3] || ''}</td></tr>`;
                 }
             });
             if (currentSub) {
-                currentSub += `<table class="table">${subTable}</table></div></div>`;
-                currentMain += currentSub;
+                currentSub += subTable + '</table></div></div>';
+                currentMain += currentSub + '</div></div>';
             }
-            if (currentMain) accordion.innerHTML += currentMain + '</div></div>';
+            if (currentMain) accordion.innerHTML += currentMain;
             return accordion;
         }
 
@@ -151,7 +150,7 @@
                     else td.textContent = cell;
                     tr.appendChild(td);
                 });
-                if (i > 0 && row[1] && row[1].trim() !== '' && row[2] && row[2].trim() !== '') { // Chỉ màu nếu có No. (row[1]) 
+                if (i > 0 && row[1] && row[1].trim() !== '' && row[2] && row[2].trim() !== '') { // Chỉ màu nếu có No.
                     if (row[2].includes('3')) tr.classList.add('row-3star');
                     else if (row[2].includes('4')) tr.classList.add('row-4star');
                     else if (row[2].includes('5')) tr.classList.add('row-5star');
