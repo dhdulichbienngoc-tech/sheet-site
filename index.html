@@ -12,14 +12,12 @@
         .container { max-width: 1200px; margin: auto; }
         .nav-pills .nav-link { background-color: #e9ecef; color: #0d6efd; border-radius: 20px; margin: 0 5px; padding: 10px 20px; }
         .nav-pills .nav-link.active { background-color: #0d6efd; color: white; }
-        .accordion-button { color: #0d6efd; font-weight: bold; background-color: #fff3cd; } /* Vàng nhạt for main */
-        .sub-title { color: #dc3545; } /* Đỏ for sub title */
+        .accordion-button { color: #0d6efd; font-weight: bold; background-color: #f0f8ff; }
         .table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
         .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         .table th { background-color: #f2f2f2; }
         .table tr:hover { background-color: #f1f1f1; }
-        .inclusions-td { background-color: #e9ecef; } /* Xám for inclusions */
-        /* Màu nhạt for tab 2+ */
+        /* Màu nhạt */
         .row-3star { background-color: #d4edda; } /* Xanh lá nhạt */
         .row-4star { background-color: #d1ecf1; } /* Xanh dương nhạt */
         .row-5star { background-color: #f8d7da; } /* Đỏ hồng nhạt */
@@ -29,12 +27,10 @@
         .chat-icon.phone { background-color: #007bff; }
         .chat-icon.zalo { background-color: #0088ff; }
         @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px); } 60% { transform: translateY(-5px); } }
-        .logo { display: block; margin: 0 auto 20px; width: 200px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <img class="logo" src="https://i.imgur.com/4c5rE4B.png" alt="BLUE OCEAN TRAVEL">
         <h1 class="text-center mb-4" style="color: #0d6efd;">Blue Ocean 2026</h1>
         <ul class="nav nav-pills mb-4 justify-content-center" id="sheetTabs"></ul>
         <div id="tableContainer"></div>
@@ -84,9 +80,9 @@
 
                 let content;
                 if (sheetIndex === 0) {
-                    content = createStructureForTab1(data);
+                    content = createAccordionForSheet1(data);
                 } else {
-                    content = createTableForOtherTabs(data, sheetIndex !== 5); // Không màu cho tab 5 (Restaurant)
+                    content = createTableForOtherSheets(data, sheetIndex);
                 }
 
                 document.getElementById('tableContainer').innerHTML = '';
@@ -99,48 +95,51 @@
             }
         }
 
-        // Cấu trúc cho tab 1
-        function createStructureForTab1(data) {
-            const div = document.createElement('div');
+        // Accordion cho sheet 1
+        function createAccordionForSheet1(data) {
+            const accordion = document.createElement('div');
+            accordion.className = 'accordion';
+            let mainId = 0;
             let currentMain = '';
-            let currentSub = '';
             let table = '';
             let link = '';
+            let subTitle = '';
             data.forEach((row, i) => {
                 if (i === 0) return; // Skip header
                 if (row[1] && row[1].includes('package')) { // Main package
-                    if (currentMain) div.innerHTML += currentMain + '</div>';
-                    currentMain = `<div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#main${i}">${row[1]}</button></h2><div id="main${i}" class="accordion-collapse collapse show"><div class="accordion-body">`;
-                    currentSub = '';
+                    if (currentMain) accordion.innerHTML += currentMain + '</div></div>';
+                    currentMain = `<div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#main${mainId}">${row[1]}</button></h2><div id="main${mainId}" class="accordion-collapse collapse show"><div class="accordion-body">`;
+                    mainId++;
                     table = '';
                     link = '';
+                    subTitle = '';
                 } else if (row[0] && row[1]) { // Sub-tour
-                    if (currentSub) currentMain += currentSub + table + '</table></div>';
-                    currentSub = `<h3 class="sub-title">${row[0]}</h3>`;
-                    link = row[1].startsWith('http') ? `<a href="${row[1]}" target="_blank">View Itinerary / Website</a><br>` : '';
+                    if (subTitle) currentMain += subTitle + link + table + '</table>';
+                    subTitle = `<h3>${row[0]}</h3>`;
+                    link = `<a href="${row[1]}" target="_blank">View Itinerary / Website</a><br>`;
                     table = '<table class="table"><tr><th>Inclusions</th><th>Price (VND)</th></tr>';
                 } else if (row[0] === '' && row[2]) { // Details
-                    table += `<tr><td class="inclusions-td">${row[2]}</td><td>${row[3]}</td></tr>`;
+                    table += `<tr><td>${row[2]}</td><td>${row[3]}</td></tr>`;
                 }
             });
-            if (currentSub) currentMain += currentSub + link + table + '</table></div>';
-            if (currentMain) div.innerHTML += currentMain + '</div>';
-            return div;
+            if (subTitle) currentMain += subTitle + link + table + '</table>';
+            if (currentMain) accordion.innerHTML += currentMain + '</div></div>';
+            return accordion;
         }
 
-        // Bảng cho tab 2+
-        function createTableForOtherTabs(data, applyColor) {
+        // Bảng cho sheet 2+
+        function createTableForOtherSheets(data, index) {
             const table = document.createElement('table');
             table.className = 'table table-bordered table-hover';
             data.forEach((row, i) => {
                 const tr = document.createElement('tr');
                 row.forEach((cell, j) => {
                     const td = document.createElement(i === 0 ? 'th' : 'td');
-                    if (cell.startsWith('http')) td.innerHTML = `<a href="${cell}" target="_blank">View Itinerary / Website</a>`;
+                    if (cell.startsWith('http')) td.innerHTML = `<a href="${cell}" target="_blank">View Website</a>`;
                     else td.textContent = cell;
                     tr.appendChild(td);
                 });
-                if (applyColor && i > 0 && row[1] && row[1].trim() !== '') { // Không màu nếu không có No.
+                if (i > 0 && row[1] && row[1].trim() !== '' && row[2] && row[2].trim() !== '') { // Chỉ màu nếu có No. và Ranking
                     if (row[2].includes('3')) tr.classList.add('row-3star');
                     else if (row[2].includes('4')) tr.classList.add('row-4star');
                     else if (row[2].includes('5')) tr.classList.add('row-5star');
