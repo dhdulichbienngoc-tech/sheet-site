@@ -105,13 +105,13 @@
                         td.innerHTML = `<a href="${cell}" target="_blank" class="blue-text">View Itinerary / Website</a>`;
                     } else {
                         td.textContent = cell;
-                        if (j === 0 && cell.toUpperCase().includes('PACKAGE')) td.classList.add('red-text'); // Chữ đỏ for package title
+                        if (j === 1 && cell.toUpperCase().includes('PACKAGE')) td.classList.add('red-text'); // Chữ đỏ cho package ở cột 2
                     }
                     tr.appendChild(td);
                 });
                 if (sheetIndex === 0) { // Tab 1
-                    if (row[0] && row[0].includes('-')) tr.classList.add('yellow-highlight'); // Vàng for sub-tour line
-                    if (row[1] && row[1].includes('Inclusions')) tr.classList.add('yellow-highlight'); // Vàng for Inclusions line
+                    if (row[1] && row[1].includes('-')) tr.classList.add('yellow-highlight'); /* Vàng cho dòng tour chứa '-' ở cột 2 */
+                    if (row[2] && row[2].includes('Inclusions')) tr.classList.add('yellow-highlight'); /* Vàng cho dòng Inclusions ở cột 3 */
                 } else if (sheetIndex >= 1 && sheetIndex <= 3) { // Tab 2-4 màu ranking
                     if (i > 0 && row[1] && row[1].trim() !== '' && row[2] && row[2].trim() !== '') {
                         if (row[2].includes('3')) tr.classList.add('row-3star');
