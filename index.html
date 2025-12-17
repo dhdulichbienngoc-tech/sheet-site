@@ -16,24 +16,24 @@
         .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         .table th { background-color: #f2f2f2; }
         .table tr:hover { background-color: #f1f1f1; }
-        /* Màu nhạt */
+        /* Highlight */
+        .yellow-highlight { background-color: #ffff00; }
+        .red-text { color: #ff0000; }
+        .blue-text { color: #0000ff; }
+        /* Màu nhạt for tab 2-4 */
         .row-3star { background-color: #d4edda; } /* Xanh lá nhạt */
         .row-4star { background-color: #d1ecf1; } /* Xanh dương nhạt */
         .row-5star { background-color: #f8d7da; } /* Đỏ hồng nhạt */
-        .package-row { background-color: #fff3cd; } /* Vàng nhạt cho package lớn */
-        .sub-tour-row { background-color: #e9ecef; } /* Xám cho sub-tour */
         /* Chat bubbles */
         .chat-bubbles { position: fixed; bottom: 20px; right: 20px; flex-direction: column; gap: 10px; z-index: 1000; }
         .chat-icon { background-color: #25D366; color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); animation: bounce 2s infinite; }
         .chat-icon.phone { background-color: #007bff; }
         .chat-icon.zalo { background-color: #0088ff; }
         @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px); } 60% { transform: translateY(-5px); } }
-        .logo { display: block; margin: 0 auto 20px; width: 200px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <img class="logo" src="https://i.imgur.com/4c5rE4B.png" alt="BLUE OCEAN TRAVEL">
         <h1 class="text-center mb-4" style="color: #0d6efd;">Blue Ocean 2026</h1>
         <ul class="nav nav-pills mb-4 justify-content-center" id="sheetTabs"></ul>
         <div id="tableContainer"></div>
@@ -93,7 +93,7 @@
             }
         }
 
-        // Hàm tạo bảng, với màu và logic cho tất cả tab
+        // Hàm tạo bảng
         function createTable(data, sheetIndex) {
             const table = document.createElement('table');
             table.className = 'table table-bordered table-hover';
@@ -101,19 +101,24 @@
                 const tr = document.createElement('tr');
                 row.forEach((cell, j) => {
                     const td = document.createElement(i === 0 ? 'th' : 'td');
-                    if (cell.startsWith('http')) td.innerHTML = `<a href="${cell}" target="_blank">View Itinerary / Website</a>`;
-                    else td.textContent = cell;
+                    if (cell.startsWith('http')) {
+                        td.innerHTML = `<a href="${cell}" target="_blank" class="blue-text">View Itinerary / Website</a>`;
+                    } else {
+                        td.textContent = cell;
+                        if (j === 0 && cell.toUpperCase().includes('PACKAGE')) td.classList.add('red-text'); // Chữ đỏ for package title
+                    }
                     tr.appendChild(td);
                 });
-                if (sheetIndex === 0) { // Tab 1 giữ nguyên, thêm màu nếu cần
-                    if (row[1] && row[1].includes('package')) tr.classList.add('package-row');
-                } else if (sheetIndex < 5) { // Tab 2-4 màu ranking, không màu group
+                if (sheetIndex === 0) { // Tab 1
+                    if (row[0] && row[0].includes('-')) tr.classList.add('yellow-highlight'); // Vàng for sub-tour line
+                    if (row[1] && row[1].includes('Inclusions')) tr.classList.add('yellow-highlight'); // Vàng for Inclusions line
+                } else if (sheetIndex >= 1 && sheetIndex <= 3) { // Tab 2-4 màu ranking
                     if (i > 0 && row[1] && row[1].trim() !== '' && row[2] && row[2].trim() !== '') {
                         if (row[2].includes('3')) tr.classList.add('row-3star');
                         else if (row[2].includes('4')) tr.classList.add('row-4star');
                         else if (row[2].includes('5')) tr.classList.add('row-5star');
                     }
-                } // Tab 5+ không màu
+                } // Tab 5+ (Restaurant, Contact) không màu
                 table.appendChild(tr);
             });
             return table;
