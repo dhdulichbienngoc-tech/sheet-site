@@ -17,14 +17,10 @@
         .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         .table th { background-color: #f2f2f2; }
         .table tr:hover { background-color: #f1f1f1; }
-        /* Highlight (sẽ override bởi style inline từ cột E) */
+        /* Highlight (sẽ override bởi style inline từ cột E/F) */
         .yellow-highlight { background-color: #ffff00; }
         .red-text { color: #ff0000; }
         .blue-text { color: #0000ff; }
-        /* Màu nhạt for tab 2-4 */
-        .row-3star { background-color: #d4edda; } /* Xanh lá nhạt */
-        .row-4star { background-color: #d1ecf1; } /* Xanh dương nhạt */
-        .row-5star { background-color: #f8d7da; } /* Đỏ hồng nhạt */
         /* Chat bubbles */
         .chat-bubbles { position: fixed; bottom: 20px; right: 20px; flex-direction: column; gap: 10px; z-index: 1000; }
         .chat-icon { background-color: #25D366; color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); animation: bounce 2s infinite; }
@@ -101,9 +97,13 @@
             table.className = 'table table-bordered table-hover';
             data.forEach((row, i) => {
                 const tr = document.createElement('tr');
-                const highlightColor = (row[5] || ''); // Đọc màu từ cột F (index 5) cho tất cả tab
+                const highlightColor = row[5] || ''; // Đọc màu từ cột F (index 5) cho tất cả tab
                 const isHighlighted = !!highlightColor || (sheetIndex === 0 && row[2] === 'Inclusions' && row[3].includes('Price/ (VND)'));
-                const isGroupTab = sheetIndex >= 1 && sheetIndex <= 5; // Áp dụng cho tab 2-6 (Northern to Restaurant)
+                if (highlightColor) {
+                    tr.style.backgroundColor = highlightColor; // Áp dụng màu
+                } else if (sheetIndex === 0 && row[2] === 'Inclusions' && row[3].includes('Price/ (VND)')) {
+                    tr.classList.add('yellow-highlight'); // Fallback nếu không có cột F ở tab 1
+                }
 
                 row.forEach((cell, j) => {
                     if (j === 5) return; // Ẩn cột F (index 5) cho tất cả tab
@@ -120,20 +120,13 @@
                     if (sheetIndex === 0 && (isHighlighted || td.classList.contains('red-text'))) {
                         td.style.fontWeight = 'bold'; // In đậm cho chữ trong row highlight và tiêu đề đỏ ở tab 1
                     }
-                    if (isGroupTab && j === 0 && cell.trim() !== '') { // In đậm nội dung cột GROUP (j===0) ở tab 2-6
+                    if (sheetIndex >= 1 && j === 0 && cell.trim() !== '') { // In đậm nội dung cột GROUP (j===0) ở tab 2+
                         td.style.fontWeight = 'bold';
                     } else if (highlightColor && j > 0) { // Áp dụng highlight cho các cột từ 1 trở đi (không áp cho cột GROUP)
                         td.style.backgroundColor = highlightColor;
                     }
                     tr.appendChild(td);
                 });
-                if (sheetIndex >= 1 && sheetIndex <= 3) { // Tab 2-4 màu ranking
-                    if (i > 0 && row[1] && row[1].trim() !== '' && row[2] && row[2].trim() !== '') {
-                        if (row[2].includes('3')) tr.classList.add('row-3star');
-                        else if (row[2].includes('4')) tr.classList.add('row-4star');
-                        else if (row[2].includes('5')) tr.classList.add('row-5star');
-                    }
-                } // Tab 5+ (Restaurant, Contact) không màu
                 table.appendChild(tr);
             });
             return table;
