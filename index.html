@@ -16,7 +16,7 @@
         .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         .table th { background-color: #f2f2f2; }
         .table tr:hover { background-color: #f1f1f1; }
-        /* Highlight */
+        /* Highlight (sẽ override bởi style inline từ cột E) */
         .yellow-highlight { background-color: #ffff00; }
         .red-text { color: #ff0000; }
         .blue-text { color: #0000ff; }
@@ -110,7 +110,15 @@
                     tr.appendChild(td);
                 });
                 if (sheetIndex === 0) { // Tab 1
-                    if (row[2] === 'Inclusions' && row[3].includes('Price/ (VND)')) tr.classList.add('yellow-highlight'); // Vàng chỉ cho dòng header tour
+                    // Highlight từ cột E (Highlight Color)
+                    const highlightColor = row[4] || ''; // Cột E (index 4)
+                    if (highlightColor) {
+                        tr.style.backgroundColor = highlightColor; // Áp dụng màu trực tiếp
+                    }
+                    // Nếu không có cột E, fallback highlight vàng cho header tour
+                    else if (row[2] === 'Inclusions' && row[3].includes('Price/ (VND)')) {
+                        tr.classList.add('yellow-highlight');
+                    }
                 } else if (sheetIndex >= 1 && sheetIndex <= 3) { // Tab 2-4 màu ranking
                     if (i > 0 && row[1] && row[1].trim() !== '' && row[2] && row[2].trim() !== '') {
                         if (row[2].includes('3')) tr.classList.add('row-3star');
