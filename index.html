@@ -110,8 +110,7 @@
                     tr.appendChild(td);
                 });
                 if (sheetIndex === 0) { // Tab 1
-                    if (row[1] && row[1].includes('-')) tr.classList.add('yellow-highlight'); /* Vàng cho dòng tour chứa '-' ở cột 2 */
-                    if (row[2] && row[2].includes('Inclusions')) tr.classList.add('yellow-highlight'); /* Vàng cho dòng Inclusions ở cột 3 */
+                    if (row[2] === 'Inclusions' && row[3].includes('Price/ (VND)')) tr.classList.add('yellow-highlight'); // Vàng chỉ cho dòng header tour
                 } else if (sheetIndex >= 1 && sheetIndex <= 3) { // Tab 2-4 màu ranking
                     if (i > 0 && row[1] && row[1].trim() !== '' && row[2] && row[2].trim() !== '') {
                         if (row[2].includes('3')) tr.classList.add('row-3star');
