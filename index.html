@@ -101,16 +101,12 @@
             table.className = 'table table-bordered table-hover';
             data.forEach((row, i) => {
                 const tr = document.createElement('tr');
-                const highlightColor = (sheetIndex === 0 && row[4]) ? row[4] : ''; // Đọc màu từ cột E chỉ cho tab 1
+                const highlightColor = (row[5] || ''); // Đọc màu từ cột F (index 5) cho tất cả tab
                 const isHighlighted = !!highlightColor || (sheetIndex === 0 && row[2] === 'Inclusions' && row[3].includes('Price/ (VND)'));
-                if (highlightColor) {
-                    tr.style.backgroundColor = highlightColor; // Áp dụng màu
-                } else if (sheetIndex === 0 && row[2] === 'Inclusions' && row[3].includes('Price/ (VND)')) {
-                    tr.classList.add('yellow-highlight'); // Fallback nếu không có cột E
-                }
+                const isGroupTab = sheetIndex >= 1 && sheetIndex <= 5; // Áp dụng cho tab 2-6 (Northern to Restaurant)
 
                 row.forEach((cell, j) => {
-                    if (sheetIndex === 0 && j === 4) return; // Ẩn cột E (index 4) cho tab 1
+                    if (j === 5) return; // Ẩn cột F (index 5) cho tất cả tab
                     const td = document.createElement(i === 0 ? 'th' : 'td');
                     if (cell.startsWith('http')) {
                         td.innerHTML = `<a href="${cell}" target="_blank" class="blue-text">View Itinerary / Website</a>`;
@@ -122,7 +118,12 @@
                         }
                     }
                     if (sheetIndex === 0 && (isHighlighted || td.classList.contains('red-text'))) {
-                        td.style.fontWeight = 'bold'; // In đậm cho chữ trong row highlight và tiêu đề đỏ
+                        td.style.fontWeight = 'bold'; // In đậm cho chữ trong row highlight và tiêu đề đỏ ở tab 1
+                    }
+                    if (isGroupTab && j === 0 && cell.trim() !== '') { // In đậm nội dung cột GROUP (j===0) ở tab 2-6
+                        td.style.fontWeight = 'bold';
+                    } else if (highlightColor && j > 0) { // Áp dụng highlight cho các cột từ 1 trở đi (không áp cho cột GROUP)
+                        td.style.backgroundColor = highlightColor;
                     }
                     tr.appendChild(td);
                 });
