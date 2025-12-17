@@ -12,7 +12,6 @@
         .container { max-width: 1200px; margin: auto; }
         .nav-pills .nav-link { background-color: #e9ecef; color: #0d6efd; border-radius: 20px; margin: 0 5px; padding: 10px 20px; }
         .nav-pills .nav-link.active { background-color: #0d6efd; color: white; }
-        .accordion-button { color: #0d6efd; font-weight: bold; background-color: #f0f8ff; }
         .table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
         .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         .table th { background-color: #f2f2f2; }
@@ -21,16 +20,20 @@
         .row-3star { background-color: #d4edda; } /* Xanh lá nhạt */
         .row-4star { background-color: #d1ecf1; } /* Xanh dương nhạt */
         .row-5star { background-color: #f8d7da; } /* Đỏ hồng nhạt */
+        .package-row { background-color: #fff3cd; } /* Vàng nhạt cho package lớn */
+        .sub-tour-row { background-color: #e9ecef; } /* Xám cho sub-tour */
         /* Chat bubbles */
         .chat-bubbles { position: fixed; bottom: 20px; right: 20px; flex-direction: column; gap: 10px; z-index: 1000; }
         .chat-icon { background-color: #25D366; color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); animation: bounce 2s infinite; }
         .chat-icon.phone { background-color: #007bff; }
         .chat-icon.zalo { background-color: #0088ff; }
         @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px); } 60% { transform: translateY(-5px); } }
+        .logo { display: block; margin: 0 auto 20px; width: 200px; }
     </style>
 </head>
 <body>
     <div class="container">
+        <img class="logo" src="https://i.imgur.com/4c5rE4B.png" alt="BLUE OCEAN TRAVEL">
         <h1 class="text-center mb-4" style="color: #0d6efd;">Blue Ocean 2026</h1>
         <ul class="nav nav-pills mb-4 justify-content-center" id="sheetTabs"></ul>
         <div id="tableContainer"></div>
@@ -78,12 +81,7 @@
                 const csvText = await response.text();
                 const data = Papa.parse(csvText, {header: false, skipEmptyLines: true}).data;
 
-                let content;
-                if (sheetIndex === 0) {
-                    content = createAccordionForSheet1(data);
-                } else {
-                    content = createTableForOtherSheets(data, sheetIndex);
-                }
+                const content = createTable(data, sheetIndex);
 
                 document.getElementById('tableContainer').innerHTML = '';
                 document.getElementById('tableContainer').appendChild(content);
@@ -95,55 +93,27 @@
             }
         }
 
-        // Accordion cho sheet 1
-        function createAccordionForSheet1(data) {
-            const accordion = document.createElement('div');
-            accordion.className = 'accordion';
-            let mainId = 0;
-            let currentMain = '';
-            let table = '';
-            let link = '';
-            let subTitle = '';
-            data.forEach((row, i) => {
-                if (i === 0) return; // Skip header
-                if (row[1] && row[1].includes('package')) { // Main package
-                    if (currentMain) accordion.innerHTML += currentMain + '</div></div>';
-                    currentMain = `<div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#main${mainId}">${row[1]}</button></h2><div id="main${mainId}" class="accordion-collapse collapse show"><div class="accordion-body">`;
-                    mainId++;
-                    table = '';
-                    link = '';
-                    subTitle = '';
-                } else if (row[0] && row[1]) { // Sub-tour
-                    if (subTitle) currentMain += subTitle + link + table + '</table>';
-                    subTitle = `<h3>${row[0]}</h3>`;
-                    link = `<a href="${row[1]}" target="_blank">View Itinerary / Website</a><br>`;
-                    table = '<table class="table"><tr><th>Inclusions</th><th>Price (VND)</th></tr>';
-                } else if (row[0] === '' && row[2]) { // Details
-                    table += `<tr><td>${row[2]}</td><td>${row[3]}</td></tr>`;
-                }
-            });
-            if (subTitle) currentMain += subTitle + link + table + '</table>';
-            if (currentMain) accordion.innerHTML += currentMain + '</div></div>';
-            return accordion;
-        }
-
-        // Bảng cho sheet 2+
-        function createTableForOtherSheets(data, index) {
+        // Hàm tạo bảng, với màu và logic cho tất cả tab
+        function createTable(data, sheetIndex) {
             const table = document.createElement('table');
             table.className = 'table table-bordered table-hover';
             data.forEach((row, i) => {
                 const tr = document.createElement('tr');
                 row.forEach((cell, j) => {
                     const td = document.createElement(i === 0 ? 'th' : 'td');
-                    if (cell.startsWith('http')) td.innerHTML = `<a href="${cell}" target="_blank">View Website</a>`;
+                    if (cell.startsWith('http')) td.innerHTML = `<a href="${cell}" target="_blank">View Itinerary / Website</a>`;
                     else td.textContent = cell;
                     tr.appendChild(td);
                 });
-                if (i > 0 && row[1] && row[1].trim() !== '' && row[2] && row[2].trim() !== '') { // Chỉ màu nếu có No. và Ranking
-                    if (row[2].includes('3')) tr.classList.add('row-3star');
-                    else if (row[2].includes('4')) tr.classList.add('row-4star');
-                    else if (row[2].includes('5')) tr.classList.add('row-5star');
-                }
+                if (sheetIndex === 0) { // Tab 1 giữ nguyên, thêm màu nếu cần
+                    if (row[1] && row[1].includes('package')) tr.classList.add('package-row');
+                } else if (sheetIndex < 5) { // Tab 2-4 màu ranking, không màu group
+                    if (i > 0 && row[1] && row[1].trim() !== '' && row[2] && row[2].trim() !== '') {
+                        if (row[2].includes('3')) tr.classList.add('row-3star');
+                        else if (row[2].includes('4')) tr.classList.add('row-4star');
+                        else if (row[2].includes('5')) tr.classList.add('row-5star');
+                    }
+                } // Tab 5+ không màu
                 table.appendChild(tr);
             });
             return table;
